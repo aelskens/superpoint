@@ -11,4 +11,5 @@ from .model import (
     KeypointDetector,
     VGGLikeEncoder,
     numpy_image_to_torch,
+    remove_batch_dimension,
 )
