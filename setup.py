@@ -16,7 +16,7 @@ from setuptools import Command, find_packages, setup
 # Package meta-data.
 NAME = "superpoint"
 DESCRIPTION = "A more flexible implementation of SuperPoint."
-# URL = 'https://github.com/me/myproject'
+URL = "https://github.com/aelskens/superpoint"
 EMAIL = "arthur.elskens@ulb.be"
 AUTHOR = "Arthur Elskens"
 REQUIRES_PYTHON = ">=3.10"
@@ -242,7 +242,7 @@ setup(
     author=AUTHOR,
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
-    # url=URL,
+    url=URL,
     packages=find_packages("src", exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     package_dir={"": "src"},
     install_requires=required,
@@ -264,8 +264,8 @@ setup(
         "custom_build": CustomBuildCommand,
         "upload": UploadCommand,
     },
-    # project_urls={
-    #     "GitHub": URL,
-    #     "Tracker": os.path.join(URL, "issues"),
-    # },
+    project_urls={
+        "GitHub": URL,
+        "Tracker": os.path.join(URL, "issues"),
+    },
 )
