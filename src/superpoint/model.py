@@ -121,7 +121,7 @@ class VGGLikeEncoder(nn.Module):
         assert isinstance(p, dict)
         self.load_state_dict(p)
 
-    def save(self, outpath: str) -> None:
+    def save(self, outpath: Optional[str] = None) -> None:
         if not outpath:
             outpath = f"{MODELS_PATH}/{self.__class__.__name__}.pth"
 
@@ -212,7 +212,7 @@ class KeypointDetector(nn.Module):
         assert isinstance(p, dict)
         self.load_state_dict(p)
 
-    def save(self, outpath: str) -> None:
+    def save(self, outpath: Optional[str] = None) -> None:
         if not outpath:
             outpath = f"{MODELS_PATH}/{self.__class__.__name__}.pth"
 
@@ -268,7 +268,7 @@ class KeypointDescriptor(nn.Module):
         assert isinstance(p, dict)
         self.load_state_dict(p)
 
-    def save(self, outpath: str) -> None:
+    def save(self, outpath: Optional[str] = None) -> None:
         if not outpath:
             outpath = f"{MODELS_PATH}/{self.__class__.__name__}.pth"
 
