@@ -10,6 +10,6 @@ from .model import (
     KeypointDescriptor,
     KeypointDetector,
     VGGLikeEncoder,
-    numpy_image_to_torch,
-    remove_batch_dimension,
 )
+
+from .utils import numpy_image_to_torch, remove_batch_dimension
