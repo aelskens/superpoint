@@ -71,6 +71,12 @@ class VGGLikeEncoder(nn.Module):
     """VGG-like encoder."""
 
     def __init__(self, activation_func: nn.Module = nn.ReLU(inplace=True)) -> None:
+        """Constructor of VGGLikeEncoder class.
+
+        :param activation_func: The activation function to use, defaults to nn.ReLU(inplace=True).
+        :type activation_func: nn.Module, optional
+        """
+
         super().__init__()
 
         self.activation = activation_func
@@ -88,6 +94,14 @@ class VGGLikeEncoder(nn.Module):
         self.conv4b = nn.Conv2d(c4, c4, kernel_size=3, stride=1, padding=1)
 
     def forward(self, img: torch.Tensor) -> torch.Tensor:
+        """Encode the image.
+
+        :param img: The image to encode.
+        :type img: torch.Tensor
+        :return: The encoded image.
+        :rtype: torch.Tensor
+        """
+
         assert isinstance(img, torch.Tensor), "The given input image is not a Tensor."
 
         if img.shape[1] == 3:
@@ -114,6 +128,12 @@ class VGGLikeEncoder(nn.Module):
     def load(self, p: dict) -> None: ...
 
     def load(self, p: str | dict) -> None:
+        """Load the model's weights.
+
+        :param p: The path to or the dictionary of weights to load into the model.
+        :type p: str | dict
+        """
+
         if isinstance(p, str):
             loader = smart_loader(p)
             p = loader(p)
@@ -122,6 +142,13 @@ class VGGLikeEncoder(nn.Module):
         self.load_state_dict(p)
 
     def save(self, outpath: Optional[str] = None) -> None:
+        """Save the model's weights.
+
+        :param outpath: Where to save the weights. If None, use the model subdirectory,
+        defaults to None.
+        :type outpath: Optional[str], optional
+        """
+
         if not outpath:
             outpath = f"{MODELS_PATH}/{self.__class__.__name__}.pth"
 
@@ -139,6 +166,23 @@ class KeypointDetector(nn.Module):
         detection_threshold: float = 0.0005,
         remove_borders: int = 4,
     ) -> None:
+        """Constructor for KeypointDetector class.
+
+        :param activation_func: The activation function to use, defaults to nn.ReLU(inplace=True).
+        :type activation_func: nn.Module, optional
+        :param max_num_keypoints: The maximum number of keypoints to detect. If None, there are
+        no limits, defaults to None.
+        :type max_num_keypoints: Optional[int], optional
+        :param nms_radius: The radius of the kernel used for the NMS step, defaults to 4.
+        :type nms_radius: int, optional
+        :param detection_threshold: The score threshold under which the keypoints are discarded,
+        defaults to 0.0005.
+        :type detection_threshold: float, optional
+        :param remove_borders: The distance to the borders under which the keypoints are
+        discarded, defaults to 4
+        :type remove_borders: int, optional
+        """
+
         super().__init__()
         self.max_num_keypoints = max_num_keypoints
         self.nms_radius = nms_radius
@@ -160,6 +204,7 @@ class KeypointDetector(nn.Module):
         :return: The keypoints and their scores.
         :rtype: tuple[list[torch.Tensor], torch.Tensor]
         """
+
         assert isinstance(x, torch.Tensor), "The given input is not a Tensor."
 
         # Compute the dense keypoint scores
@@ -205,6 +250,12 @@ class KeypointDetector(nn.Module):
     def load(self, p: dict) -> None: ...
 
     def load(self, p: str | dict) -> None:
+        """Load the model's weights.
+
+        :param p: The path to or the dictionary of weights to load into the model.
+        :type p: str | dict
+        """
+
         if isinstance(p, str):
             loader = smart_loader(p)
             p = loader(p)
@@ -213,6 +264,13 @@ class KeypointDetector(nn.Module):
         self.load_state_dict(p)
 
     def save(self, outpath: Optional[str] = None) -> None:
+        """Save the model's weights.
+
+        :param outpath: Where to save the weights. If None, use the model subdirectory,
+        defaults to None.
+        :type outpath: Optional[str], optional
+        """
+
         if not outpath:
             outpath = f"{MODELS_PATH}/{self.__class__.__name__}.pth"
 
@@ -223,6 +281,14 @@ class KeypointDescriptor(nn.Module):
     """Keypoint Descriptor Decoder."""
 
     def __init__(self, activation_func: nn.Module = nn.ReLU(inplace=True), descriptor_dim: int = 256) -> None:
+        """Constructor of KeypointDescriptor class.
+
+        :param activation_func: The activation function to use, defaults to nn.ReLU(inplace=True).
+        :type activation_func: nn.Module, optional
+        :param descriptor_dim: The dimensions of the descriptors, defaults to 256.
+        :type descriptor_dim: int, optional
+        """
+
         super().__init__()
         self.activation = activation_func
 
@@ -261,6 +327,12 @@ class KeypointDescriptor(nn.Module):
     def load(self, p: dict) -> None: ...
 
     def load(self, p: str | dict) -> None:
+        """Load the model's weights.
+
+        :param p: The path to or the dictionary of weights to load into the model.
+        :type p: str | dict
+        """
+
         if isinstance(p, str):
             loader = smart_loader(p)
             p = loader(p)
@@ -269,6 +341,13 @@ class KeypointDescriptor(nn.Module):
         self.load_state_dict(p)
 
     def save(self, outpath: Optional[str] = None) -> None:
+        """Save the model's weights.
+
+        :param outpath: Where to save the weights. If None, use the model subdirectory,
+        defaults to None.
+        :type outpath: Optional[str], optional
+        """
+
         if not outpath:
             outpath = f"{MODELS_PATH}/{self.__class__.__name__}.pth"
 
@@ -281,6 +360,17 @@ class FlexibleSuperPoint(nn.Module):
     def __init__(
         self, encoder: nn.Module, detector: Optional[nn.Module] = None, descriptor: Optional[nn.Module] = None
     ) -> None:
+        """Constructor of FlexibleSuperPoint class.
+
+        :param encoder: The Encoder block.
+        :type encoder: nn.Module
+        :param detector: The detection head, if None then the detection step is skipped. It defaults to None.
+        :type detector: Optional[nn.Module], optional
+        :param descriptor: The description head, if None then the description step is skipped. It defaults to
+        None.
+        :type descriptor: Optional[nn.Module], optional
+        """
+
         super().__init__()
 
         self.encoder = encoder
@@ -290,6 +380,16 @@ class FlexibleSuperPoint(nn.Module):
     def forward(
         self, img: torch.Tensor, keypoints: Optional[list[torch.Tensor]] = None
     ) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
+        """Detect and describe keypoints from the input image.
+
+        :param img:  The image from which the keypoints will be described and described.
+        :type img: torch.Tensor
+        :param keypoints: The keypoints to describe, defaults to None.
+        :type keypoints: Optional[list[torch.Tensor]], optional
+        :return: The keypoints along with their scores and descriptors.
+        :rtype: tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]
+        """
+
         assert isinstance(img, torch.Tensor), "The given input image is not a Tensor."
 
         scores, descriptors = None, None
@@ -309,6 +409,15 @@ class FlexibleSuperPoint(nn.Module):
         return torch.stack(keypoints, 0) if keypoints else None, scores, descriptors
 
     def load(self, path: str = MODELS_PATH, agglomerated: bool = False) -> None:
+        """Load the model's weights.
+
+        :param path: The path to the weights to load into the model, defaults to MODELS_PATH.
+        :type path: str, optional
+        :param agglomerated: Whether the weights to load are grouped in a single file or not,
+        defaults to False.
+        :type agglomerated: bool, optional
+        """
+
         encoder_params, detector_params, descriptor_params = {}, {}, {}
 
         if agglomerated:

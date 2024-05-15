@@ -110,4 +110,12 @@ def sample_descriptors(keypoints, descriptors, s: int = 8):
 
 
 def remove_batch_dimension(t: torch.Tensor) -> torch.Tensor:
+    """Remove the batch dimension from Tensor.
+
+    :param t: The tensor to adapt.
+    :type t: torch.Tensor
+    :return: The adapted tensor.
+    :rtype: torch.Tensor
+    """
+
     return t.squeeze(0)
