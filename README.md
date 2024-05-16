@@ -28,7 +28,7 @@ descriptor = KeypointDescriptor()
 
 # Define the complete model and load the weights from the pretrained SuperPoint model
 fsuperpoint = FlexibleSuperPoint(encoder, detector=detector, descriptor=descriptor).eval()
-model.load("https://github.com/cvg/LightGlue/releases/download/v0.1_arxiv/superpoint_v1.pth", agglomerated=True)
+fsuperpoint.load("https://github.com/cvg/LightGlue/releases/download/v0.1_arxiv/superpoint_v1.pth", agglomerated=True)
 
 # Read an image
 img = imread("path/to/image")
