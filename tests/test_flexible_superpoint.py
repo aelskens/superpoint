@@ -35,7 +35,7 @@ building_expected = pickle_load("./tests/superpoint_extract_building.pickle")
     "img, expected",
     [(wsi, wsi_expected), (building, building_expected)],
 )
-def test_cohrence_with_superpoint(img, expected) -> None:
+def test_coherence_with_superpoint(img, expected) -> None:
     """Unit test to validate that the results of FlexibleSuperPoint correspond to that of the original implementation."""
 
     def _compare(dict1, dict2):
