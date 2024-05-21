@@ -441,7 +441,7 @@ class FlexibleSuperPoint(nn.Module):
         ]:
             block.load(f"{path}/{block.__class__.__name__}.pth" if not params else params)
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def detect(self, img: np.ndarray) -> Sequence[cv2.KeyPoint]:
         """Implementation of OpenCV's Feature2D `detect()` method.
 
@@ -468,7 +468,7 @@ class FlexibleSuperPoint(nn.Module):
 
         return tuple(tmp)
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def compute(self, img: np.ndarray, keypoints: Sequence[cv2.KeyPoint]) -> tuple[Sequence[cv2.KeyPoint], np.ndarray]:
         """Implementation of OpenCV's Feature2D `detect()` method.
 
@@ -499,7 +499,7 @@ class FlexibleSuperPoint(nn.Module):
 
         return keypoints, remove_batch_dimension(descriptors).numpy(force=True)
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def detectAndCompute(self, img: np.ndarray) -> tuple[Sequence[cv2.KeyPoint], np.ndarray]:
         """Implementation of OpenCV's Feature2D `detect()` method.
 
@@ -526,7 +526,7 @@ class FlexibleSuperPoint(nn.Module):
 
         return tuple(tmp), remove_batch_dimension(descriptors).numpy(force=True)
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def extract(self, img: torch.Tensor, **conf: Any) -> dict[str, torch.Tensor]:
         """Perform extraction with online resizing.
 
