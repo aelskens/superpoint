@@ -113,6 +113,4 @@ def test_gpu_optimization(img) -> None:
     end_time = perf_counter()
     cpu_run_time = end_time - start_time
 
-    print(cpu_run_time, gpu_run_time)
-
     assert cpu_run_time > gpu_run_time
