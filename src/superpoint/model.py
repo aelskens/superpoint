@@ -127,7 +127,7 @@ class VGGLikeEncoder(nn.Module):
     @overload
     def load(self, p: dict) -> None: ...
 
-    def load(self, p: str | dict) -> None:
+    def load(self, p):
         """Load the model's weights.
 
         :param p: The path to or the dictionary of weights to load into the model.
@@ -249,7 +249,7 @@ class KeypointDetector(nn.Module):
     @overload
     def load(self, p: dict) -> None: ...
 
-    def load(self, p: str | dict) -> None:
+    def load(self, p):
         """Load the model's weights.
 
         :param p: The path to or the dictionary of weights to load into the model.
@@ -326,7 +326,7 @@ class KeypointDescriptor(nn.Module):
     @overload
     def load(self, p: dict) -> None: ...
 
-    def load(self, p: str | dict) -> None:
+    def load(self, p):
         """Load the model's weights.
 
         :param p: The path to or the dictionary of weights to load into the model.
