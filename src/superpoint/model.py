@@ -55,12 +55,16 @@ from kornia.color import rgb_to_grayscale
 from torch import nn
 
 from .utils import (
+    ArrayLike,
     ImagePreprocessor,
-    numpy_image_to_torch,
+    MatLike,
+    image_to_tensor,
+    keypoint_to_tensor,
     remove_batch_dimension,
     sample_descriptors,
     simple_nms,
     smart_loader,
+    tensor_to_cv_keypoint,
     top_k_keypoints,
 )
 
@@ -442,11 +446,11 @@ class FlexibleSuperPoint(nn.Module):
             block.load(f"{path}/{block.__class__.__name__}.pth" if not params else params)
 
     @torch.inference_mode()
-    def detect(self, img: np.ndarray) -> Sequence[cv2.KeyPoint]:
+    def detect(self, img: MatLike) -> Sequence[cv2.KeyPoint]:
         """Implementation of OpenCV's Feature2D `detect()` method.
 
         :param img: The image from which the keypoints will be detected.
-        :type img: np.ndarray
+        :type img: MatLike
         :return: The detected keypoints.
         :rtype: Sequence[cv2.KeyPoint]
         """
@@ -454,7 +458,8 @@ class FlexibleSuperPoint(nn.Module):
         if self.detector is None:
             raise ExecError("Cannot detect keypoints if the model has no Detection decoder.")
 
-        tf_img = numpy_image_to_torch(img)
+        tf_img = image_to_tensor(img)
+
         tmp_desc = self.descriptor
         self.descriptor = None
 
@@ -469,13 +474,13 @@ class FlexibleSuperPoint(nn.Module):
         return tuple(tmp)
 
     @torch.inference_mode()
-    def compute(self, img: np.ndarray, keypoints: Sequence[cv2.KeyPoint]) -> tuple[Sequence[cv2.KeyPoint], np.ndarray]:
+    def compute(self, img: MatLike, keypoints: ArrayLike) -> tuple[Sequence[cv2.KeyPoint], np.ndarray]:
         """Implementation of OpenCV's Feature2D `detect()` method.
 
         :param img: The image from which the keypoints will be described.
-        :type img: np.ndarray
+        :type img: MatLike
         :param keypoints: The keypoints to describe.
-        :type keypoints: Sequence[cv2.KeyPoint]
+        :type keypoints: ArrayLike
         :return keypoints: The detected keypoints.
         :rtype: Sequence[cv2.KeyPoint]
         :return descriptors: The associated descriptors.
@@ -485,9 +490,8 @@ class FlexibleSuperPoint(nn.Module):
         if self.descriptor is None:
             raise ExecError("Cannot describe keypoints if the model has no Descriptor decoder.")
 
-        tf_img = numpy_image_to_torch(img)
-        # Expected input: [torch.tensor(shape=(n_kp, 2))]
-        tf_keypoints = [torch.stack([torch.tensor(kp.pt) for kp in keypoints])]
+        tf_img = image_to_tensor(img)
+        tf_keypoints = [keypoint_to_tensor(keypoints)]
 
         tmp_detect = self.detector
         self.detector = None
@@ -497,14 +501,16 @@ class FlexibleSuperPoint(nn.Module):
 
         assert descriptors is not None
 
-        return keypoints, remove_batch_dimension(descriptors).numpy(force=True)
+        return (
+            keypoints if isinstance(keypoints, tuple) else tensor_to_cv_keypoint(tf_keypoints[0])
+        ), remove_batch_dimension(descriptors).numpy(force=True)
 
     @torch.inference_mode()
-    def detectAndCompute(self, img: np.ndarray) -> tuple[Sequence[cv2.KeyPoint], np.ndarray]:
+    def detectAndCompute(self, img: MatLike) -> tuple[Sequence[cv2.KeyPoint], np.ndarray]:
         """Implementation of OpenCV's Feature2D `detect()` method.
 
         :param img: The image from which the keypoints will be described and described.
-        :type img: np.ndarray
+        :type img: MatLike
         :return keypoints: The detected keypoints.
         :rtype: Sequence[cv2.KeyPoint]
         :return descriptors: The associated descriptors.
@@ -516,15 +522,13 @@ class FlexibleSuperPoint(nn.Module):
                 "Cannot detect and describe keypoints if the model has no Detector and/or no Descriptor decoders."
             )
 
-        tf_img = numpy_image_to_torch(img)
-        keypoints, scores, descriptors = self.forward(tf_img)
+        tf_img = image_to_tensor(img)
+        _keypoints, scores, descriptors = self.forward(tf_img)
 
-        assert keypoints is not None and scores is not None and descriptors is not None
-        tmp = []
-        for kp, score in zip(remove_batch_dimension(keypoints), remove_batch_dimension(scores)):
-            tmp.append(cv2.KeyPoint(x=kp[0].item(), y=kp[1].item(), size=1.0, response=score.item()))
+        assert _keypoints is not None and scores is not None and descriptors is not None
+        keypoints = tensor_to_cv_keypoint(_keypoints, scores)
 
-        return tuple(tmp), remove_batch_dimension(descriptors).numpy(force=True)
+        return keypoints, remove_batch_dimension(descriptors).numpy(force=True)
 
     @torch.inference_mode()
     def extract(self, img: torch.Tensor, **conf: Any) -> dict[str, torch.Tensor]:

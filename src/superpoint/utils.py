@@ -1,26 +1,85 @@
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Sequence, Tuple, Union
 
+import cv2
 import kornia
 import numpy as np
 import torch
 from torchvision import transforms
 
+MatLike = Union[np.ndarray, torch.Tensor]
+ArrayLike = Union[MatLike, Sequence[cv2.KeyPoint]]
+
+
+def image_to_tensor(img: MatLike) -> torch.Tensor:
+    """Convert image to torch.Tensor.
+
+    :param img: The input image to convert to torch.Tensor.
+    :type img: MatLike
+    :return: The torch.Tensor image (dtype=torch.float32). Note that a batch dimension was added.
+    :rtype: torch.Tensor
+    """
+
+    if isinstance(img, torch.Tensor):
+        tmp = img.unsqueeze(0) if img.ndim < 4 else img
+    elif isinstance(img, np.ndarray):
+        tmp = numpy_image_to_torch(img)
+    else:
+        raise TypeError(f"The given input image type, {type(img)}, is not supported at the moment.")
+
+    return tmp.type(torch.float32)
+
 
 def numpy_image_to_torch(img: np.ndarray) -> torch.Tensor:
-    """Convert numpy image to torch.
+    """Convert numpy image to torch.Tensor.
 
     :param img: The input numpy image to convert to torch.
     :type img: np.ndarray
-    :return: The converted torch image.
+    :return: The torch.Tensor image.
     :rtype: torch.Tensor
     """
 
     numpy_to_torch = transforms.ToTensor()
-
-    if img.dtype == float and img.dtype != np.float32:
-        img = img.astype(np.float32)
-
     return numpy_to_torch(img).unsqueeze(0)
+
+
+def keypoint_to_tensor(keypoints: ArrayLike) -> torch.Tensor:
+    """Convert keypoints in the expected input of the descriptor head: torch.tensor(shape=(n_kp, 2)).
+
+    :param keypoints: The keypoints (N) to convert as a tensor [N x 2].
+    :type keypoints: ArrayLike
+    :raises TypeError: Triggers if the input type is not supported.
+    :return: The converted keypoints.
+    :rtype: torch.Tensor
+    """
+
+    if isinstance(keypoints, tuple):
+        return torch.stack([torch.tensor(kp.pt) for kp in keypoints])
+    elif isinstance(keypoints, np.ndarray):
+        return torch.tensor(keypoints)
+    elif isinstance(keypoints, torch.Tensor):
+        return keypoints
+    else:
+        raise TypeError(f"The input keypoints type, {type(keypoints)}, does not match the current implementation.")
+
+
+def tensor_to_cv_keypoint(keypoints: torch.Tensor, scores: Optional[torch.Tensor] = None) -> Sequence[cv2.KeyPoint]:
+    """Convert keypoints in the expected input of the descriptor head: torch.tensor(shape=(n_kp, 2)).
+
+    :param keypoints: The keypoints (N) to convert as a tensor [N x 2].
+    :type keypoints: ArrayLike
+    :raises TypeError: Triggers if the input type is not supported.
+    :return: The converted cv2 keypoints.
+    :rtype: Sequence[cv2.KeyPoint]
+    """
+
+    if scores is None:
+        scores = torch.ones(keypoints.shape[:-1])
+
+    tmp = []
+    for kp, score in zip(remove_batch_dimension(keypoints), remove_batch_dimension(scores)):
+        tmp.append(cv2.KeyPoint(x=kp[0].item(), y=kp[1].item(), size=1.0, response=score.item()))
+
+    return tuple(tmp)
 
 
 def smart_loader(path: str) -> Callable:

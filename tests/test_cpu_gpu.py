@@ -11,7 +11,7 @@ from src.superpoint import (
     KeypointDescriptor,
     KeypointDetector,
     VGGLikeEncoder,
-    numpy_image_to_torch,
+    image_to_tensor,
 )
 
 
@@ -32,14 +32,18 @@ wsi_expected = pickle_load("./tests/superpoint_extract_wsi.pickle")
 building_expected = pickle_load("./tests/superpoint_extract_building.pickle")
 
 
-# REMARK: The following test fails because there are differences between the CPU and GPU results
-# Indeed, there are small differences between the keypoint_scores on the different devices which induce
-# a different ordering of the keypoints and descriptors
+# REMARK: The following test fails because there are differences between the CPU and GPU results.
+# Indeed, there are small errors due to the limited floating point precision cf.
+# https://discuss.pytorch.org/t/what-is-the-specific-reason-to-get-different-results-on-cuda-and-without-cuda/156315/6
 @pytest.mark.parametrize(
     "img, expected",
     [(wsi, wsi_expected), (building, building_expected)],
 )
 def _test_gpu(img, expected) -> None:
+    """
+    Unit test to validate that the results of FlexibleSuperPoint on CPU correspond to those obtained when run on GPU.
+    """
+
     def _compare(dict1, dict2):
         for k in dict1:
             if not torch.all(dict1[k] == dict2[k]):
@@ -61,7 +65,7 @@ def _test_gpu(img, expected) -> None:
     )
     model.load("https://github.com/cvg/LightGlue/releases/download/v0.1_arxiv/superpoint_v1.pth", agglomerated=True)
 
-    assert _compare(model.extract(numpy_image_to_torch(img).to(device), resize=None), expected)
+    assert _compare(model.extract(image_to_tensor(img).to(device), resize=None), expected)
 
 
 @pytest.mark.parametrize(
@@ -72,6 +76,8 @@ def _test_gpu(img, expected) -> None:
     ],
 )
 def test_gpu_optimization(img) -> None:
+    """Unit test to validate that FlexibleSuperPoint not only runs on GPU but faster than on GPU."""
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     assert device.type == "cuda", "CUDA is not available. This test won't pass as long as CUDA is not available."
 
@@ -85,7 +91,7 @@ def test_gpu_optimization(img) -> None:
         .to(device)
     )
     model.load("https://github.com/cvg/LightGlue/releases/download/v0.1_arxiv/superpoint_v1.pth", agglomerated=True)
-    tensor_img = numpy_image_to_torch(img).to(device)
+    tensor_img = image_to_tensor(img).to(device)
     model.extract(tensor_img, resize=None)
 
     # Time the second extraction as it takes time for the GPU warm itself
@@ -106,7 +112,7 @@ def test_gpu_optimization(img) -> None:
         .to(device)
     )
     model.load("https://github.com/cvg/LightGlue/releases/download/v0.1_arxiv/superpoint_v1.pth", agglomerated=True)
-    tensor_img = numpy_image_to_torch(img).to(device)
+    tensor_img = image_to_tensor(img).to(device)
 
     start_time = perf_counter()
     model.extract(tensor_img, resize=None)
