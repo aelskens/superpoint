@@ -3,7 +3,6 @@ import pickle
 import numpy as np
 import pytest
 import torch
-from utils import keypoint_to_tensor
 
 from src.superpoint import (
     FlexibleSuperPoint,
@@ -11,6 +10,7 @@ from src.superpoint import (
     KeypointDetector,
     VGGLikeEncoder,
     image_to_tensor,
+    keypoint_to_tensor,
     remove_batch_dimension,
 )
 
