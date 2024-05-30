@@ -11,4 +11,4 @@ from .model import (
     KeypointDetector,
     VGGLikeEncoder,
 )
-from .utils import image_to_tensor, remove_batch_dimension
+from .utils import image_to_tensor, keypoint_to_tensor, remove_batch_dimension
